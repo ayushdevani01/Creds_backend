@@ -1,9 +1,10 @@
 import { Router } from 'express';
 import * as post_controller from '../controllers/post.controller';
 import { auth_middleware } from '../middleware/auth.middleware';
+import { api_limiter } from '../middleware/rateLimiter';
 
 const router = Router();
-router.use(auth_middleware);
+router.use(auth_middleware, api_limiter);
 
 router.post('/publish', post_controller.publish);
 router.post('/schedule', post_controller.schedule);

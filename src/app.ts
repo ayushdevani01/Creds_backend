@@ -10,6 +10,7 @@ import post_routes from './routes/post.routes';
 import dashboard_routes from './routes/dashboard.routes';
 import { error_handler } from './middleware/error.middleware';
 import { get_webhook_handler } from './bot/bot';
+import { auth_limiter } from './middleware/rateLimiter';
 
 const app = express();
 
@@ -20,6 +21,9 @@ app.use(express.json());
 app.use(morgan('dev'));
 
 app.post('/bot/webhook', get_webhook_handler());
+
+app.use('/api/auth/login', auth_limiter);
+app.use('/api/auth/register', auth_limiter);
 
 app.use('/api/auth', auth_routes);
 app.use('/api/user', user_routes);

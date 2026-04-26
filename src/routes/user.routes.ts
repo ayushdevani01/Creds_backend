@@ -1,11 +1,12 @@
 import { Router } from 'express';
 import * as user_controller from '../controllers/user.controller';
 import { auth_middleware } from '../middleware/auth.middleware';
+import { api_limiter } from '../middleware/rateLimiter';
 
 const router = Router();
 
 // All user routes require authentication
-router.use(auth_middleware as any);
+router.use(auth_middleware as any, api_limiter);
 
 router.get('/profile', user_controller.get_profile as any);
 router.put('/profile', user_controller.update_profile as any);
