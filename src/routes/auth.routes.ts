@@ -10,4 +10,8 @@ router.post('/refresh', auth_controller.refresh);
 router.post('/logout', auth_controller.logout);
 router.get('/me', auth_middleware, auth_controller.me);
 
+// Twitter OAuth
+router.get('/twitter', auth_middleware, auth_controller.twitter_oauth_start);
+router.get('/twitter/callback', auth_controller.twitter_oauth_callback);
+
 export default router;
