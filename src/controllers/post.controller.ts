@@ -117,8 +117,18 @@ export async function delete_post(req: AuthRequest, res: Response, next: NextFun
   try {
     const post = await prisma.posts.findFirst({
       where: { id: req.params.id, user_id: req.user!.id, deleted_at: null },
+      include: { platform_posts: true },
     });
     if (!post) return send_error(res, 'Post not found', 404);
+
+    // Check if any platform post is already published or processing
+    const has_started = post.platform_posts.some(pp => 
+      ['published', 'processing'].includes(pp.status)
+    );
+
+    if (has_started) {
+      return send_error(res, 'Cannot delete post: publishing has already started or finished.', 400);
+    }
 
     // Soft delete
     await prisma.posts.update({
@@ -132,7 +142,7 @@ export async function delete_post(req: AuthRequest, res: Response, next: NextFun
       data: { status: 'cancelled' },
     });
 
-    return send_success(res, { message: 'Post deleted' });
+    return send_success(res, { message: 'Post cancelled and deleted' });
   } catch (err) { next(err); }
 }
 
