@@ -4,9 +4,11 @@ import * as auth_service from '../../services/auth.service';
 import * as user_service from '../../services/user.service';
 import * as social_service from '../../services/social.service';
 import * as content_service from '../../services/content.service';
+import * as publish_service from '../../services/publish.service';
 import { get_session, save_session, clear_session } from '../session';
 import { BotSession } from '../../types';
 import { env } from '../../config/env';
+
 // post COMMAND 
 export async function handle_post(ctx: Context) {
   const chat_id = ctx.chat!.id;
@@ -145,8 +147,27 @@ export async function handle_post_callback(ctx: Context) {
     session.step = 'publishing';
     await save_session(chat_id, session);
 
+    // Prepare platforms data for service
+    const platforms_data = session.platforms!.map(p => ({
+      platform: p,
+      content: session.generated_content![p].content,
+      hashtags: session.generated_content![p].hashtags || [],
+    }));
+
+    // Create post and queue jobs
+    await publish_service.create_and_queue({
+      user_id: session.user_id,
+      idea: session.idea!,
+      post_type: session.post_type!,
+      tone: session.tone!,
+      language: session.language || 'en',
+      model_used: session.model_used!,
+      tokens_used: session.tokens_used || 0,
+      platforms: platforms_data,
+    });
+
     await ctx.editMessageText(
-      'Post queued! Publishing happens in the background.\n\n' +
+      '✅ Post queued! Publishing happens in the background.\n\n' +
       'Use /status in a few moments to check the final result of each platform.'
     );
 
