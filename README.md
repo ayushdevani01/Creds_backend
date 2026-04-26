@@ -55,6 +55,36 @@ You can find the full API documentation in the Postman collection included in th
 - `GET /api/dashboard/stats` - Get a performance overview and post statistics
 - `POST /api/content/generate` - Generate and preview AI content
 
+### Testing with Custom AI Keys (For Reviewers)
+By default, the system uses the global fallback AI keys. If you want to test the multi-tenant key isolation, you can upload your own OpenAI or Anthropic keys. The bot will automatically decrypt and use your keys for all your posts.
+
+1. **Login to get your JWT Token:**
+   ```bash
+   curl -X POST "https://backend-production-8df7.up.railway.app/api/auth/login" \
+        -H "Content-Type: application/json" \
+        -d '{"email":"your_email@example.com","password":"your_password"}'
+   ```
+2. **Set your API Keys:**
+   ```bash
+   curl -X PUT "https://backend-production-8df7.up.railway.app/api/user/ai-keys" \
+        -H "Content-Type: application/json" \
+        -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
+        -d '{"openai_key":"sk-proj-...", "anthropic_key":"sk-ant-..."}'
+   ```
+
+### Connecting a Twitter Account (For Reviewers)
+Because there is no frontend yet, the OAuth flow is initiated via the API. 
+
+1. **Get the OAuth Authorization Link:**
+   ```bash
+   curl -X GET "https://backend-production-8df7.up.railway.app/api/auth/twitter" \
+        -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+   ```
+2. **Open the URL:** 
+   The API will return a JSON response containing a Twitter `url`. Copy that URL and paste it into your web browser.
+3. **Authorize:**
+   Click "Authorize app". Twitter will redirect back to the Railway server, save your encrypted access tokens to the database, and display a success message!
+
 ## Architecture overview
 
 ```ascii
