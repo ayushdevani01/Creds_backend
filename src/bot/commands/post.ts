@@ -3,6 +3,7 @@ import OpenAI, { toFile } from 'openai';
 import * as auth_service from '../../services/auth.service';
 import * as user_service from '../../services/user.service';
 import * as social_service from '../../services/social.service';
+import * as content_service from '../../services/content.service';
 import { get_session, save_session, clear_session } from '../session';
 import { BotSession } from '../../types';
 import { env } from '../../config/env';
@@ -244,46 +245,27 @@ export async function handle_post_message(ctx: Context, session: BotSession) {
   await ctx.reply(`Idea: "${idea}"\n\nGenerating your content...`);
 
   try {
-    // Placeholder content until AI engine is wired up
-    const generated: Record<string, { content: string; char_count: number; hashtags?: string[] }> = {};
+    const result = await content_service.generate(session.user_id, {
+      idea,
+      post_type: session.post_type!,
+      platforms: session.platforms!,
+      tone: session.tone!,
+      language: session.language || 'en',
+      model: session.model!,
+    });
 
-    for (const platform of session.platforms!) {
-      if (platform === 'twitter') {
-        generated.twitter = {
-          content: `[Generated Twitter content for: ${idea.slice(0, 60)}]`,
-          char_count: 200,
-          hashtags: ['#placeholder'],
-        };
-      } else if (platform === 'linkedin') {
-        generated.linkedin = {
-          content: `[Generated LinkedIn content for: ${idea.slice(0, 60)}]`,
-          char_count: 800,
-          hashtags: ['#placeholder'],
-        };
-      } else if (platform === 'instagram') {
-        generated.instagram = {
-          content: `[Generated Instagram content for: ${idea.slice(0, 60)}]`,
-          char_count: 300,
-          hashtags: ['#placeholder', '#instagram'],
-        };
-      } else if (platform === 'threads') {
-        generated.threads = {
-          content: `[Generated Threads content for: ${idea.slice(0, 60)}]`,
-          char_count: 250,
-        };
-      }
-    }
-
-    session.generated_content = generated;
+    session.generated_content = result.generated;
+    session.model_used = result.model_used;
+    session.tokens_used = result.tokens_used;
     session.step = 'preview';
     await save_session(chat_id, session);
 
     // Build preview message
     let preview = '';
     for (const platform of session.platforms!) {
-      const content = generated[platform];
+      const content = result.generated[platform];
       if (content) {
-        const tags = content.hashtags ? `\n${content.hashtags.join(' ')}` : '';
+        const tags = (content.hashtags && content.hashtags.length > 0) ? `\n${content.hashtags.join(' ')}` : '';
         preview += `- ${platform} (${content.char_count} chars):\n"${content.content}"${tags}\n\n`;
       }
     }

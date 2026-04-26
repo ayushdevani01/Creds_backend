@@ -8,10 +8,14 @@ async function start() {
     await prisma.$connect();
     console.log('Database connected');
     if (env.TELEGRAM_WEBHOOK_URL) {
-      await bot.api.setWebhook(env.TELEGRAM_WEBHOOK_URL, {
-        secret_token: env.TELEGRAM_WEBHOOK_SECRET || undefined,
-      });
-      console.log('Telegram webhook set');
+      try {
+        await bot.api.setWebhook(env.TELEGRAM_WEBHOOK_URL, {
+          secret_token: env.TELEGRAM_WEBHOOK_SECRET || undefined,
+        });
+        console.log('Telegram webhook set');
+      } catch (err: any) {
+        console.warn(`Failed to set Telegram webhook: ${err.message}`);
+      }
     } else {
       console.warn('TELEGRAM_WEBHOOK_URL is missing. Bot will not receive messages.');
     }

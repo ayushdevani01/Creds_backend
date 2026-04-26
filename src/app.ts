@@ -5,6 +5,7 @@ import morgan from 'morgan';
 
 import auth_routes from './routes/auth.routes';
 import user_routes from './routes/user.routes';
+import content_routes from './routes/content.routes';
 import { error_handler } from './middleware/error.middleware';
 import { get_webhook_handler } from './bot/bot';
 
@@ -20,6 +21,7 @@ app.post('/bot/webhook', get_webhook_handler());
 
 app.use('/api/auth', auth_routes);
 app.use('/api/user', user_routes);
+app.use('/api/content', content_routes);
 
 // Health check
 app.get('/health', (req, res) => {
