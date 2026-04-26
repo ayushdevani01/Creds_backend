@@ -1,6 +1,7 @@
 import { Worker } from 'bullmq';
 import { redis } from '../config/redis';
 import { prisma } from '../config/database';
+import { publish_to_twitter } from './twitter.handler';
 import { update_parent_post_status } from './utils';
 
 const worker = new Worker('publish', async (job) => {
@@ -22,6 +23,7 @@ const worker = new Worker('publish', async (job) => {
 
   switch (job.name) {
     case 'twitter':
+      return publish_to_twitter(job.data);
     case 'linkedin':
     case 'instagram':
     case 'threads':
@@ -79,4 +81,4 @@ worker.on('failed', async (job, err) => {
   }
 });
 
-console.log('🔄 Worker started, listening for publish jobs...');
+console.log('Worker started, listening for publish jobs...');
