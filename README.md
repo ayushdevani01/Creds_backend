@@ -1,6 +1,6 @@
 # Postly — Multi-Platform AI Content Publishing Engine
 
-**Live API URL:** TODO
+**Live API URL:** https://backend-production-8df7.up.railway.app
 
 Postly is a backend engine designed to help users generate and publish social media content across platforms like Twitter, LinkedIn, Instagram, and Threads. It primarily uses a Telegram bot as the user interface and relies on AI models like OpenAI and Claude for content generation.
 
