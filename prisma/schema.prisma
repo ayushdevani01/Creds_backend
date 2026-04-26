@@ -1,0 +1,100 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model users {
+  id               String   @id @default(uuid())
+  email            String   @unique
+  password_hash    String
+  name             String
+  bio              String?
+  default_tone     String   @default("professional")
+  default_language String   @default("en")
+  telegram_chat_id String?  @unique
+  created_at       DateTime @default(now())
+  updated_at       DateTime @updatedAt
+
+  refresh_tokens  refresh_tokens[]
+  social_accounts social_accounts[]
+  ai_keys         ai_keys?
+  posts           posts[]
+}
+
+model refresh_tokens {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  user_id    String
+  user       users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  expires_at DateTime
+  created_at DateTime @default(now())
+
+  @@index([user_id])
+}
+
+model social_accounts {
+  id                String   @id @default(uuid())
+  user_id           String
+  user              users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  platform          String
+  access_token_enc  String
+  refresh_token_enc String?
+  handle            String?
+  connected_at      DateTime @default(now())
+
+  @@unique([user_id, platform])
+  @@index([user_id])
+}
+
+model ai_keys {
+  id                String   @id @default(uuid())
+  user_id           String   @unique
+  user              users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  openai_key_enc    String?
+  anthropic_key_enc String?
+  updated_at        DateTime @updatedAt
+}
+
+model posts {
+  id          String    @id @default(uuid())
+  user_id     String
+  user        users     @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  idea        String
+  post_type   String
+  tone        String
+  language    String    @default("en")
+  model_used  String
+  tokens_used Int?
+  status      String    @default("draft")
+  publish_at  DateTime?
+  deleted_at  DateTime?
+  created_at  DateTime  @default(now())
+
+  platform_posts platform_posts[]
+
+  @@index([user_id])
+  @@index([status])
+  @@index([created_at])
+}
+
+model platform_posts {
+  id            String    @id @default(uuid())
+  post_id       String
+  post          posts     @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  platform      String
+  content       String
+  hashtags      String[]  @default([])
+  status        String    @default("queued")
+  published_at  DateTime?
+  error_message String?
+  attempts      Int       @default(0)
+  external_id   String?
+  job_id        String?
+
+  @@index([post_id])
+  @@index([status])
+}
