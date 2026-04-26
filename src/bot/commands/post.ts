@@ -1,8 +1,11 @@
 import { Context, InlineKeyboard } from 'grammy';
+import OpenAI, { toFile } from 'openai';
 import * as auth_service from '../../services/auth.service';
 import * as user_service from '../../services/user.service';
+import * as social_service from '../../services/social.service';
 import { get_session, save_session, clear_session } from '../session';
 import { BotSession } from '../../types';
+import { env } from '../../config/env';
 // post COMMAND 
 export async function handle_post(ctx: Context) {
   const chat_id = ctx.chat!.id;
@@ -170,6 +173,27 @@ export async function handle_post_callback(ctx: Context) {
   }
 }
 
+async function transcribe_voice(ctx: Context, user_id: string): Promise<string> {
+  const voice = ctx.message!.voice!;
+  const file = await ctx.api.getFile(voice.file_id);
+
+  const file_url = `https://api.telegram.org/file/bot${env.TELEGRAM_BOT_TOKEN}/${file.file_path}`;
+  const response = await fetch(file_url);
+  const audio_buffer = Buffer.from(await response.arrayBuffer());
+
+  const user_keys = await social_service.get_ai_keys(user_id);
+  const openai = new OpenAI({
+    apiKey: user_keys.openai_key || env.OPENAI_API_KEY,
+  });
+
+  const transcription = await openai.audio.transcriptions.create({
+    file: await toFile(audio_buffer, 'voice.ogg', { type: 'audio/ogg' }),
+    model: 'whisper-1',
+  });
+
+  return transcription.text;
+}
+
 // TEXT/VOICE MESSAGE HANDLER (Step 5: idea input)
 export async function handle_post_message(ctx: Context, session: BotSession) {
   const chat_id = ctx.chat!.id;
@@ -183,8 +207,19 @@ export async function handle_post_message(ctx: Context, session: BotSession) {
 
   if (ctx.message?.voice) {
     await ctx.reply('Transcribing your voice message...');
-    await ctx.reply('Voice input will be available soon. Please type your idea instead.');
-    return;
+    try {
+      idea = await transcribe_voice(ctx, session.user_id);
+      if (!idea || idea.trim().length < 5) {
+        await ctx.reply("Couldn't understand the audio. Try again or type your idea.");
+        return;
+      }
+      idea = idea.trim().slice(0, 500);
+      await ctx.reply(`I heard: "${idea}"`);
+    } catch (err: any) {
+      console.error('Whisper error:', err);
+      await ctx.reply('Failed to transcribe voice. Please type your idea instead.');
+      return;
+    }
   } else if (ctx.message?.text) {
     idea = ctx.message.text;
   } else {
