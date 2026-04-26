@@ -2,6 +2,9 @@ import { Worker } from 'bullmq';
 import { redis } from '../config/redis';
 import { prisma } from '../config/database';
 import { publish_to_twitter } from './twitter.handler';
+import { publish_to_linkedin } from './linkedin.handler';
+import { publish_to_instagram } from './instagram.handler';
+import { publish_to_threads } from './threads.handler';
 import { update_parent_post_status } from './utils';
 
 const worker = new Worker('publish', async (job) => {
@@ -25,9 +28,11 @@ const worker = new Worker('publish', async (job) => {
     case 'twitter':
       return publish_to_twitter(job.data);
     case 'linkedin':
+      return publish_to_linkedin(job.data);
     case 'instagram':
+      return publish_to_instagram(job.data);
     case 'threads':
-      return scaffolded_publish(job.data, job.name);
+      return publish_to_threads(job.data);
     default:
       throw new Error(`Unknown platform: ${job.name}`);
   }
@@ -39,21 +44,6 @@ const worker = new Worker('publish', async (job) => {
     },
   },
 });
-
-async function scaffolded_publish(data: any, platform: string) {
-  console.log(`[SCAFFOLDED] Would publish to ${platform}:`, data.content?.slice(0, 50));
-
-  await prisma.platform_posts.update({
-    where: { id: data.platform_post_id },
-    data: {
-      status: 'published',
-      published_at: new Date(),
-      external_id: `scaffolded_${Date.now()}`,
-    },
-  });
-
-  await update_parent_post_status(data.platform_post_id);
-}
 
 worker.on('completed', (job) => {
   console.log(`Job ${job.id} (${job.name}) completed`);
