@@ -94,8 +94,12 @@ export async function generate(user_id: string, request: GenerateContentRequest)
   let ai_response;
   if (model === 'openai') {
     ai_response = await ai_service.generate_openai(user_id, system_prompt, user_prompt);
-  } else {
+  } else if (model === 'anthropic') {
     ai_response = await ai_service.generate_anthropic(user_id, system_prompt, user_prompt);
+  } else if (model === 'gemini') {
+    ai_response = await ai_service.generate_gemini(user_id, system_prompt, user_prompt);
+  } else {
+    throw new Error(`Unknown AI model: ${model}`);
   }
 
   // Parse JSON response

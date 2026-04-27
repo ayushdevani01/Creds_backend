@@ -7,7 +7,7 @@ Postly is a backend engine designed to help users generate and publish social me
 ## Features
 
 - **Conversational UI:** A stateful, step-by-step Telegram bot flow that guides the user through post creation.
-- **AI Content Engine:** Integrated with both OpenAI GPT-4o and Anthropic Claude 3.5 Sonnet to format posts according to platform constraints.
+- **AI Content Engine:** Integrated with OpenAI GPT-4o, Anthropic Claude 3.5 Sonnet, and Google Gemini 2.5 Flash Lite to format posts according to platform constraints. Gemini also natively supports voice/audio input for transcription.
 - **Multi-Platform Publishing:** Full integration with Twitter/X, along with scaffolded handlers ready for LinkedIn, Instagram, and Threads.
 - **Reliable Pipeline:** Uses BullMQ and Redis for queuing jobs, handling partial failures, and applying exponential backoff for retries.
 - **Secure Auth:** Implements short-lived JWT access tokens and long-lived, rotated refresh tokens. Social tokens are encrypted using AES-256-GCM before being stored in the database.
@@ -65,11 +65,11 @@ By default, the system uses the global fallback AI keys. If you want to test the
         -d '{"email":"your_email@example.com","password":"your_password"}'
    ```
 2. **Set your API Keys:**
-   ```bash
-   curl -X PUT "https://backend-production-8df7.up.railway.app/api/user/ai-keys" \
-        -H "Content-Type: application/json" \
-        -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
-        -d '{"openai_key":"sk-proj-...", "anthropic_key":"sk-ant-..."}'
+```bash
+curl -X PUT "https://backend-production-8df7.up.railway.app/api/user/ai-keys" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer <YOUR_ACCESS_TOKEN>" \
+-d '{"openai_key":"sk-proj-...", "anthropic_key":"sk-ant-...", "gemini_key":"AIza..."}'
    ```
 
 ### Connecting a Twitter Account (For Reviewers)

@@ -22,6 +22,7 @@ const add_account_schema = z.object({
 const ai_keys_schema = z.object({
   openai_key: z.string().optional(),
   anthropic_key: z.string().optional(),
+  gemini_key: z.string().optional(),
 });
 
 export async function get_profile(req: AuthRequest, res: Response, next: NextFunction) {

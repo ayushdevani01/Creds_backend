@@ -10,7 +10,7 @@ const generate_schema = z.object({
   platforms: z.array(z.enum(['twitter', 'linkedin', 'instagram', 'threads'])).min(1),
   tone: z.enum(['professional', 'casual', 'witty', 'authoritative', 'friendly']),
   language: z.string().min(2).max(5).default('en'),
-  model: z.enum(['openai', 'anthropic']),
+  model: z.enum(['openai', 'anthropic', 'gemini']),
 });
 
 export async function generate(req: AuthRequest, res: Response, next: NextFunction) {

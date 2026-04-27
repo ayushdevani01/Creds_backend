@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import Anthropic from '@anthropic-ai/sdk';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as social_service from './social.service';
 import { env } from '../config/env';
 
@@ -23,6 +24,12 @@ async function get_anthropic_client(user_id: string): Promise<Anthropic> {
   return new Anthropic({
     apiKey: keys.anthropic_key || env.ANTHROPIC_API_KEY,
   });
+}
+
+// Get Gemini client with user's key or fallback
+async function get_gemini_client(user_id: string): Promise<GoogleGenerativeAI> {
+  const keys = await social_service.get_ai_keys(user_id);
+  return new GoogleGenerativeAI(keys.gemini_key || env.GEMINI_API_KEY);
 }
 
 // Generate content using OpenAI GPT-4o
@@ -71,4 +78,29 @@ export async function generate_anthropic(
   const tokens_used = (response.usage?.input_tokens || 0) + (response.usage?.output_tokens || 0);
 
   return { text, model_used: 'claude-3-5-sonnet-20241022', tokens_used };
+}
+
+// Generate content using Google Gemini 2.5 Flash Lite
+export async function generate_gemini(
+  user_id: string,
+  system_prompt: string,
+  user_prompt: string
+): Promise<AIResponse> {
+  const gen_ai = await get_gemini_client(user_id);
+  const model = gen_ai.getGenerativeModel({ model: 'gemini-2.5-flash-lite' });
+
+  const result = await model.generateContent({
+    contents: [{ role: 'user', parts: [{ text: user_prompt }] }],
+    systemInstruction: system_prompt,
+    generationConfig: {
+      responseMimeType: 'application/json',
+      maxOutputTokens: 2000,
+    },
+  });
+
+  const text = result.response.text();
+  const usage = result.response.usageMetadata;
+  const tokens_used = usage ? (usage.promptTokenCount + usage.candidatesTokenCount) : 0;
+
+  return { text, model_used: 'gemini-2.5-flash-lite', tokens_used };
 }

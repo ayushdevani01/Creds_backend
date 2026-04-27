@@ -1,5 +1,6 @@
 import { Context, InlineKeyboard } from 'grammy';
 import OpenAI, { toFile } from 'openai';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 import * as auth_service from '../../services/auth.service';
 import * as user_service from '../../services/user.service';
 import * as social_service from '../../services/social.service';
@@ -119,9 +120,9 @@ export async function handle_post_callback(ctx: Context) {
     session.step = 'select_model';
     await save_session(chat_id, session);
 
-    const keyboard = new InlineKeyboard()
-      .text('GPT (OpenAI)', 'model:openai').row()
-      .text('Claude (Anthropic)', 'model:anthropic');
+const keyboard = new InlineKeyboard()
+    .text('GPT (OpenAI)', 'model:openai').text('Claude (Anthropic)', 'model:anthropic').row()
+    .text('Gemini (Google)', 'model:gemini');
 
     await ctx.editMessageText('Which AI model do you want to use?', {
       reply_markup: keyboard,
@@ -204,16 +205,22 @@ async function transcribe_voice(ctx: Context, user_id: string): Promise<string> 
   const audio_buffer = Buffer.from(await response.arrayBuffer());
 
   const user_keys = await social_service.get_ai_keys(user_id);
-  const openai = new OpenAI({
-    apiKey: user_keys.openai_key || env.OPENAI_API_KEY,
+  const gen_ai = new GoogleGenerativeAI(user_keys.gemini_key || env.GEMINI_API_KEY);
+  const model = gen_ai.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+  const result = await model.generateContent({
+    contents: [{
+      role: 'user',
+      parts: [{
+        inlineData: {
+          data: audio_buffer.toString('base64'),
+          mimeType: 'audio/ogg',
+        },
+      }],
+    }],
   });
 
-  const transcription = await openai.audio.transcriptions.create({
-    file: await toFile(audio_buffer, 'voice.ogg', { type: 'audio/ogg' }),
-    model: 'whisper-1',
-  });
-
-  return transcription.text;
+  return result.response.text();
 }
 
 // TEXT/VOICE MESSAGE HANDLER (Step 5: idea input)

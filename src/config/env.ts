@@ -22,6 +22,7 @@ const env_schema = z.object({
 
   OPENAI_API_KEY: z.string().default(''),
   ANTHROPIC_API_KEY: z.string().default(''),
+  GEMINI_API_KEY: z.string().default(''),
 
   TWITTER_CLIENT_ID: z.string().default(''),
   TWITTER_CLIENT_SECRET: z.string().default(''),

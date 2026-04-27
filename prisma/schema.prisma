@@ -54,8 +54,9 @@ model ai_keys {
   id                String   @id @default(uuid())
   user_id           String   @unique
   user              users    @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  openai_key_enc    String?
+openai_key_enc String?
   anthropic_key_enc String?
+  gemini_key_enc String?
   updated_at        DateTime @updatedAt
 }
 

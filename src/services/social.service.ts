@@ -56,7 +56,9 @@ export async function get_decrypted_tokens(user_id: string, platform: string) {
 }
 
 export async function upsert_ai_keys(user_id: string, data: {
-  openai_key?: string; anthropic_key?: string;
+  openai_key?: string;
+  anthropic_key?: string;
+  gemini_key?: string;
 }) {
   const result = await prisma.ai_keys.upsert({
     where: { user_id },
@@ -64,10 +66,12 @@ export async function upsert_ai_keys(user_id: string, data: {
       user_id,
       ...(data.openai_key && { openai_key_enc: encrypt(data.openai_key) }),
       ...(data.anthropic_key && { anthropic_key_enc: encrypt(data.anthropic_key) }),
+      ...(data.gemini_key && { gemini_key_enc: encrypt(data.gemini_key) }),
     },
     update: {
       ...(data.openai_key && { openai_key_enc: encrypt(data.openai_key) }),
       ...(data.anthropic_key && { anthropic_key_enc: encrypt(data.anthropic_key) }),
+      ...(data.gemini_key && { gemini_key_enc: encrypt(data.gemini_key) }),
     },
   });
 
@@ -77,15 +81,19 @@ export async function upsert_ai_keys(user_id: string, data: {
     updated_at: result.updated_at,
     has_openai_key: !!result.openai_key_enc,
     has_anthropic_key: !!result.anthropic_key_enc,
+    has_gemini_key: !!result.gemini_key_enc,
   };
 }
 
 export async function get_ai_keys(user_id: string) {
-  const keys = await prisma.ai_keys.findUnique({ where: { user_id } });
-  if (!keys) return { openai_key: null, anthropic_key: null };
+  const keys = await prisma.ai_keys.findUnique({
+    where: { user_id },
+  });
+  if (!keys) return { openai_key: null, anthropic_key: null, gemini_key: null };
 
   return {
     openai_key: keys.openai_key_enc ? decrypt(keys.openai_key_enc) : null,
     anthropic_key: keys.anthropic_key_enc ? decrypt(keys.anthropic_key_enc) : null,
+    gemini_key: keys.gemini_key_enc ? decrypt(keys.gemini_key_enc) : null,
   };
 }
