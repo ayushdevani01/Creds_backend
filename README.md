@@ -4,6 +4,12 @@
 
 Postly is a backend engine designed to help users generate and publish social media content across platforms like Twitter, LinkedIn, Instagram, and Threads. It primarily uses a Telegram bot as the user interface and relies on AI models like OpenAI and Claude for content generation.
 
+## Demo
+
+- Watch or download the demo video here: [demo.mp4](./demo.mp4)
+
+<video src="./demo.mp4" controls width="960"></video>
+
 ## Features
 
 - **Conversational UI:** A stateful, step-by-step Telegram bot flow that guides the user through post creation.
